@@ -1,0 +1,115 @@
+\documentclass[a4paper]{scrartcl}
+\usepackage[finnish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage[numbers]{natbib}
+\usepackage{hyperref}
+\subject{Pretty Simple TSP}
+\author{Jarno Leppänen}
+\title{Määrittelydokumentti}
+\date{20.1.2013}
+\begin{document}
+\maketitle
+
+\section{Johdanto}
+Pretty simple TSP (\texttt{pstsp}) on approksimatiivisen
+algoritmin toteutus kauppamatkustajan ongelmalle.
+
+\subsection{Teoriaa}
+Symmetrisen verkon pienin virittävä puu on luonteva alaraja kauppamatkustajan
+ongelman ratkaisulle, sillä minkä tahansa kaaren poistaminen ratkaisusta
+tuottaa Hamiltonin polun, joka on samalla eräs verkon virittävä puu \cite{wi}.
+Jos verkko on lisäksi täydellinen ja sen kaaret toteuttavat kolmioepäyhtälön,
+eli suora reitti solmusta $a$ solmuun $b$ on aina lyhyempi
+kuin reitti solmun $c$ kautta ($d_{ab} < d_{ac} + d_{cb}$), voidaan
+laatia pienimpään virittävään puuhun perustuva algoritmi, jonka tuottama
+ratkaisu on korkeintaan vakiokertoiminen optimaaliseen ratkaisuun verrattuna:
+\begin{enumerate}
+    \item Etsitään verkolle $G$ pienin virittävä puu $T$.
+    \item Lisätään verkkoon $H$ puun $T$ kaaret ja jokaista puun $T$ kaarta
+          $(u, v)$ vastaava kaari $(v, u)$.
+    \item Etsitään jokaisen kaaren täsmälleen kerran läpikäyvä
+          \emph{Eulerin polku} $C$
+          verkossa $H$. Polun pituus on kaksi kertaa
+          puun $T$ pituus.
+    \item Laaditaan kaikki verkon $G$ solmut täsmälleen kerran läpikäyvä
+          \emph{Hamiltonin sykli} kulkemalla polun $C$ kaaria pitkin ja
+          hyppäämällä yli kaikki jo läpikäydyt solmut.
+\end{enumerate}
+Koska verkon kaaret toteuttavat kolmioepäyhtälön, on kohdassa 4 tuotettu sykli
+lyhyempi kuin polku $C$. Algoritmi siis tuottaa kauppamatkustajan ongelmaan
+ratkaisun, joka on korkeintaan kaksi kertaa optimaalista ratkaisua pidempi.
+
+Ratkaisu voidaan myös tuottaa yhdistämällä kaarilla sellaiset 
+pienimmän virittävän puun solmut, joiden asteluku on pariton luku ja
+muodostamalla Eulerin polku syntyneessä verkossa.
+\emph{Christofidesin algoritmissa}\cite{ch} yhdistävät kaaret valitaan
+siten, että niiden painojen summa on mahdollisimman pieni. Voidaan
+osoittaa, että näin saadun ratkaisun pituuden yläraja on $3/2$ kertaa 
+optimiratkaisun pituus.
+
+\section{Toteutettavat algoritmit}
+\texttt{pstsp} koostuu kahdesta osasta.
+
+\subsection{Lyhimpien polkujen haku kaikkien verkon solmujen välillä}
+Ensimmäisessä osassa syötteenä oleva verkko käsitellään siten,
+että esiteltyä algoritmia voidaan käyttää. Jos verkko
+ei ole täydellinen tai toteuta kolmioepäyhtälöä, laaditaan uusi verkko
+hakemalla lyhimmät polut kaikkien solmujen välillä ja asettamalla nämä
+kaarien painoiksi. Kaikkien lyhimpien polkujen hakuun toteutetaan
+Floyd-Warshallin algoritmi\cite{fw} ja harvoille verkoille paremmin
+soveltuva Johnsonin algoritmi\cite{jo},
+jos aikaa jää.
+
+\subsection{Approksimatiivinen algoritmi kauppamatkustajan ongelmalle}
+Toinen osa koostuu approksimatiivisen algoritmin toteutuksesta
+kauppamatkustajan ongelmalle. Pienimmän virittävän puun etsintään
+toteutetaan Primin algoritmi\cite{pr} ja Hamiltonin sykli etsitään
+yksinkertaisella syvyyssuuntaisen haun muunnoksella. Jos aikaa jää,
+toteutetaan Christofidesin algoritmi. Tässä tarvittavan 
+parittoman asteluvun solmujen täydellisen
+sovittamisen etsintään on olemassa polynomisessa ajassa toimiva
+\emph{blossom-algoritmi}\cite{bl}, joka on tosin erittäin haastava
+toteutettaa.
+
+\section{Motivaatio}
+Esitelty algoritmi soveltuu hyvin toteutettavaksi tietorakenteiden ja
+algoritmien perusteiden opettelun jälkeen. Algoritmissa ja verkon
+esikäsittelyssä hyödynnetään monia kurssilla esiteltyjä menetelmiä,
+kuten lyhimpien polkujen ja pienimmän virittävän puun etsintää.
+
+Käytännössä kauppamatkustajan ongelmaan on olemassa heuristiikkoja,
+jotka löytävät nopeammin parempia ratkaisuja, kuin tässä työssä
+käytettävät algoritmit.\cite{wi} Suurinkiin ongelmiin voidaan lisäksi löytää
+eksakti ratkaisu kokonaislukuoptimoinnin menetelmillä.
+
+\section{Laskennan vaativuus}
+Työn ensimmäisen osa on toista osaa vaativampi laskennallisesti.
+Floyd-Warshallin algoritmin aikavaativuus on
+$\Theta(|V^3|)$ ja tilavaativuus $\Theta(|V^2|)$.
+Binäärikekoa hyödyntävää Dijkstran algoritmia\cite{di} käyttävän Johnsonin
+algoritmin pahimman tapauksen aikavaativuus on luokkaa
+$\mathcal{O}((|V|+|E|)|V|\log|V|)$ ja tilavaativuus $\mathcal{O}(|V|)$. 
+
+Binäärikekoa hyödyntävän Primin algoritmin pahimman tapauksen
+aikavaativuus on luokkaa $\mathcal{O}((|V|+|E|)\log|V|)$ ja
+tilavaativuus $\mathcal(|V|)$. Christofidesin algoritmin aikavaativuus
+on laskennallisesti vaativan blossom-algoritmin vuoksi jopa
+$\mathcal{O}(|V|^4)$.
+
+\section{Ohjelman rakenne}
+Työ koostuu C++-header-kirjastosta, jossa on toteutettu vaadittavat
+algoritmit, sekä kirjastoa hyödyntävästä komentoriviltä käytettävästä
+ohjelmasta. Syötteenä hyväksytään \texttt{TSPLIB}-formaatissa\cite{tsplib}
+ja AI Odyssey -kurssilla\cite{ai} käytetyssä formaatissa olevia tiedostoja.
+Ohjelma tunnistaa, tarvitseeko syötteenä oleva verkko käsittelyä ja
+keskeyttää ajon, jos verkko sisältää negatiivisia syklejä.
+Projektinhallintaan käytetään \texttt{cmake}-työkalua\cite{cmake},
+yksikkötestaukseen \texttt{boost test}-kirjastoa\cite{gtest} ja
+dokumentointiin \texttt{doxygen}-työkalua\cite{doxygen}.
+Paperidokumenttien laatimiseen käytetään
+\LaTeX-ladontajärjestelmää\cite{latex}.
+
+\bibliographystyle{plainnat}
+\bibliography{pstsp}
+\end{document}
