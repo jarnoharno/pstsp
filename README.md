@@ -17,4 +17,4 @@ make
 
 The project contains some LaTeX-generated reports in Finnish.
 
-* Specification document: report/spec.pdf
+* [Specification document](report/spec.pdf)
